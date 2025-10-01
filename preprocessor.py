@@ -25,10 +25,6 @@ class DataPrep:
         df2 = self.synthesize(length=sy_length)
         cleaned_df = pd.concat([df1, df2], ignore_index=True).drop_duplicates()
 
-        # Convert Yes/No → Boolean (True/False)
-        cleaned_df["PreviouEmployment"] = cleaned_df["PreviouEmployment"].map(
-            {"Yes": True, "No": False}
-        )
         # --- Step 2: Prepare employer dataset ---
         employer_requirement = self.synthesize_employer_criterion(length=sy_length)
 
@@ -60,22 +56,54 @@ class DataPrep:
             {k: "Int64" for k in employer_map.values() if "Previou" not in k}
         )
 
-        # --- Step 5: Compute suitability ---
-        suitable = pd.DataFrame(
+        # ---Step 6 Clip both to same length (keeps first min_len rows)
+        # after applicant_data and employer_data are created:
+        min_len = min(len(applicant_data), len(employer_data))
+
+        ap_clipped = (
+            applicant_data.reset_index(drop=True).iloc[:min_len].reset_index(drop=True)
+        )
+        em_clipped = (
+            employer_data.reset_index(drop=True).iloc[:min_len].reset_index(drop=True)
+        )
+
+        # Step 7: obtain suitables
+        suitable_bools = self.is_suitable(
+            *[ap_clipped[c] for c in ap_clipped.columns],
+            *[em_clipped[c] for c in em_clipped.columns],
+        )
+
+        # Convert Yes/No → Boolean (True/False)
+        ap_clipped["ap_PreviouEmployment"] = ap_clipped["ap_PreviouEmployment"].map(
+            {"Yes": True, "No": False}
+        )
+        em_clipped["em_PreviouEmployment"] = em_clipped["em_PreviouEmployment"].map(
+            {"Yes": True, "No": False}
+        )
+
+        final_df = pd.concat([ap_clipped, em_clipped], axis=1)
+        final_df["Suitable"] = suitable_bools  # bool dtype
+
+        r_df = pd.DataFrame(
             {
-                "Suitable": self.is_suitable(
-                    *[applicant_data[c] for c in applicant_map.values()],
-                    *[employer_data[c] for c in employer_map.values()],
-                )
+                "age_diff": ap_clipped["ap_Age"] - em_clipped["em_Age"],
+                "education_diff": ap_clipped["ap_Education"]
+                - em_clipped["em_Education"],
+                "experience_diff": ap_clipped["ap_YearsOfExperience"]
+                - em_clipped["em_YearsOfExperience"],
+                "tech_score_diff": ap_clipped["ap_TechnicalScore"]
+                - em_clipped["em_TechnicalScore"],
+                "interview_score_diff": ap_clipped["ap_InterviewScore"]
+                - em_clipped["em_InterviewScore"],
+                "prev_employment_match": ap_clipped["ap_PreviouEmployment"]
+                == em_clipped["em_PreviouEmployment"],
             }
         )
 
-        # --- Step 6: Merge everything ---
-        final_df = pd.concat([applicant_data, employer_data, suitable], axis=1).dropna()
-
-        # --- Step 7: Save results ---
+        r_df["Suitable"] = suitable_bools
+        # --- Step 8: Save results ---
         save_path = self.encoded_dt_path if encode else self.open_dt_path
-        final_df.to_csv(save_path, index=False)
+        r_df.to_csv(save_path, index=False)
 
         logger.info(f"File saved to: \033[1;32m{save_path}\033[0m")
 
@@ -202,29 +230,40 @@ class DataPrep:
     ):
         suitable = []
 
+        # clip both sides to the same length
         length = min(len(sy_ap_age), len(sy_em_age))
 
-        for i in tqdm(range(1, length), desc="ST", leave=False):
-            sy_ap_age_suitable = list(sy_ap_age)[i] <= list(sy_em_age)[i]
-            sy_ap_education_suitable = (
-                list(sy_ap_education)[i] >= list(sy_em_education)[i]
-            )
-            sy_ap_experience_suitable = (
-                list(sy_ap_experience)[i] >= list(sy_em_experience)[i]
-            )
+        # convert once to lists for efficiency
+        sy_ap_age = list(sy_ap_age)
+        sy_ap_education = list(sy_ap_education)
+        sy_ap_experience = list(sy_ap_experience)
+        sy_ap_technical_score = list(sy_ap_technical_score)
+        sy_ap_interview_score = list(sy_ap_interview_score)
+        sy_ap_prev_employment = list(sy_ap_prev_employment)
+
+        sy_em_age = list(sy_em_age)
+        sy_em_education = list(sy_em_education)
+        sy_em_experience = list(sy_em_experience)
+        sy_em_technical_score = list(sy_em_technical_score)
+        sy_em_interview_score = list(sy_em_interview_score)
+        sy_em_prev_employment = list(sy_em_prev_employment)
+
+        for i in tqdm(range(length), desc="Find Suitables:"):  # <-- start at 0
+            sy_ap_age_suitable = sy_ap_age[i] <= sy_em_age[i]
+            sy_ap_education_suitable = sy_ap_education[i] >= sy_em_education[i]
+            sy_ap_experience_suitable = sy_ap_experience[i] >= sy_em_experience[i]
             sy_ap_technical_score_suitable = (
-                list(sy_ap_technical_score)[i] >= list(sy_em_technical_score)[i]
+                sy_ap_technical_score[i] >= sy_em_technical_score[i]
             )
             sy_ap_interview_score_suitable = (
-                list(sy_ap_interview_score)[i] >= list(sy_em_interview_score)[i]
+                sy_ap_interview_score[i] >= sy_em_interview_score[i]
             )
             sy_ap_prev_employment_suitable = (
-                list(sy_ap_prev_employment)[i] == list(sy_ap_prev_employment)[i]
+                sy_ap_prev_employment[i] == sy_em_prev_employment[i]  # <-- fixed
             )
 
             suitable.append(
-                str("Yes")
-                if all(
+                all(
                     (
                         sy_ap_age_suitable,
                         sy_ap_education_suitable,
@@ -234,7 +273,6 @@ class DataPrep:
                         sy_ap_prev_employment_suitable,
                     )
                 )
-                else str("No")
             )
 
         return suitable
@@ -242,4 +280,4 @@ class DataPrep:
 
 if __name__ == "__main__":
     inst = DataPrep()
-    inst.run()
+    inst.run(sy_length=1000_000)

@@ -56,6 +56,9 @@ def inspect_dataset(path: str):
         "\033[93m=====Column data types:=================\033[0m\n" + str(df.dtypes)
     )
 
+    logger.info("\033[93m=====Check for class imbalance:=================\033[0m")
+    logger.info(f"\033[1;1m{df["Suitable"].value_counts(normalize=True)}\033[0m")
+
     return cleaned_df
 
 

@@ -13,6 +13,7 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
 from config import getLogger, open_dataset, MODEL_DIR
+from optimizer import Optimizer
 
 logger = getLogger()
 
@@ -27,8 +28,11 @@ df = pd.read_csv(open_dataset)
 
 
 def separate_features_target(df):
-    features = df.iloc[:, :-1]
-    target = df["Suitable"]
+    optimizer = Optimizer(df, target_col="Suitable")
+    blanced_df = optimizer.oversample()
+
+    features = blanced_df.iloc[:, :-1]
+    target = blanced_df["Suitable"]
     return features, target
 
 
@@ -147,6 +151,8 @@ def _SVM(X_train, y_train, X_test, y_test, features, target):
 
 
 def _Logistic_Regression(X_train, y_train, X_test, y_test, features, target):
+    # incase of class imbalance
+    # model = LogisticRegression(class_weight="balanced")
     LogReg = LogisticRegression(random_state=2, C=0.1, max_iter=9)  # 50.37
     train_and_save_model(
         LogReg,
