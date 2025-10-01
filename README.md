@@ -43,9 +43,9 @@ Candisys/
 ## ⚙️ Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/Candisys.git
+   git clone https://github.com/skye-cyber/Candisys.git
    cd Candisys
-````
+```
 
 2. Create a virtual environment and install dependencies:
 
@@ -74,8 +74,6 @@ Candisys/
 
 ---
 
----
-
 ## 🔄 Workflow
 ```mermaid
 flowchart LR
@@ -98,7 +96,33 @@ The following ML models are implemented and benchmarked:
 * Decision Tree (best performing so far ✅)
 
 ### Decision Tree Results
+```
+python train.py -m decision_tree
+- INFO - Dataset: /home/skye/Candisys/datasets/open_dataset.csv
+--------------------------------------------------
+- INFO - Training Decision Tree...
+--------------------------------------------------
+Decision Tree's Accuracy is: 100.00%
+--------------------------------------------------
+Classification Report for Decision Tree:
+--------------------------------------------------
+              precision    recall  f1-score   support
 
+       False       1.00      1.00      1.00    170738
+        True       1.00      1.00      1.00    170786
+
+    accuracy                           1.00    341524
+   macro avg       1.00      1.00      1.00    341524
+weighted avg       1.00      1.00      1.00    341524
+
+--------------------------------------------------
+Cross-validation scores for Decision Tree: [1. 1. 1. 1. 1.]
+--------------------------------------------------
+- INFO - Decision Tree model saved to /home/skye/Candisys/models/DecisionTree.pkl
+--------------------------------------------------
+```
+
+### Random Forest Results
 ```
  python train.py -m RFC          
 - INFO - Dataset: /home/skye/Candisys/datasets/open_dataset.csv
