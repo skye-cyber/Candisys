@@ -91,19 +91,19 @@ if __name__ == "__main__":
         "age": 30,
         "education": 3,  # 1=Highschool, 2=Bachelor, 3=Masters
         "experience": 5,
-        "technical_score": 80,
-        "interview_score": 75,
+        "technical_score": 60,
+        "interview_score": 70,
         "prev_employment": True,
     }
 
     # Example Applicant
     applicant = {
-        "age": 27,
-        "education": 3,
-        "experience": 6,
+        "age": 29,
+        "education": 4,
+        "experience": 8,
         "technical_score": 70,
-        "interview_score": 60,
-        "prev_employment": False,
+        "interview_score": 70,
+        "prev_employment": True,
     }
 
     tester = Predictor(MODEL_DIR / "DecisionTree.pkl")

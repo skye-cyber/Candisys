@@ -96,3 +96,24 @@ Cross-validation scores for Random Forest Classifier: [1. 1. 1. 1. 1.]
 --------------------------------------------------
 - INFO - Random Forest Classifier model saved to /home/skye/Candisys/models/RFClassifier.pkl
 --------------------------------------------------
+
+```shell
+└─$ `python` predictor.py
+
+--- Candidate Evaluation ---
+Applicant vs Employer Differences (Applicant - Employer):
+  age_diff: -3
+  education_diff: 0
+  experience_diff: 1
+  tech_score_diff: -10
+  interview_score_diff: -15
+  prev_employment_match: 0
+
+Prediction: Not Suitable
+Confidence -> Suitable: 0.00%, Not Suitable: 100.00%
+
+Feedback:
+ - Improve technical score by 10 points.
+ - Perform better in interviews (+15 needed).
+ - Previous employment history does not meet employer’s requirement.
+```

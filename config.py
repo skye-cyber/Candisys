@@ -2,15 +2,11 @@ import logging
 from colorama import Fore, Style, init
 import warnings
 from pathlib import Path
-# from __future__ import print_function
-
 
 warnings.filterwarnings("ignore")
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
-
 init(autoreset=True)
-
 
 BASE_DIR = Path(__file__).resolve().parent
 original_dataset = BASE_DIR / "datasets/WA_Fn-UseC_-HR-Employee-Attrition.csv"
